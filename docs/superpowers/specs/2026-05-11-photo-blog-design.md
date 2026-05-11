@@ -9,8 +9,8 @@
 | 项 | 选择 | 理由 |
 |----|------|------|
 | 后端 | Python Flask + Jinja2 | 开发快，生态全 |
-| 数据库 | SQLite (Flask-SQLAlchemy) | 零维护，个人博客够用 |
-| ORM | Flask-SQLAlchemy | 未来可无缝换 MySQL |
+| 数据库 | MySQL 8.0 (服务器自建) | 免费，自建无额外费用 |
+| ORM | Flask-SQLAlchemy + PyMySQL | |
 | 邮箱 | QQ 邮箱 SMTP | 免费，国内可用 |
 | 服务器 | 腾讯云轻量 1核1G | 新用户 ¥88/年 |
 | 域名 | .top | ¥9/年 |
@@ -22,7 +22,7 @@
 单机部署，所有服务在同一台服务器：
 
 ```
-Nginx (80/443) → Gunicorn → Flask App → SQLite
+Nginx (80/443) → Gunicorn → Flask App → MySQL
                                       → 本地文件存储 (uploads/)
                                       → QQ SMTP (发验证码)
 ```
@@ -107,8 +107,8 @@ Nginx (80/443) → Gunicorn → Flask App → SQLite
 ## 部署流程
 
 1. 腾讯云购买轻量应用服务器（¥88/年）
-2. 安装 Python 3、Nginx、Git
-3. 克隆代码，pip install 依赖
+2. 安装 Python 3、Nginx、Git、MySQL 8.0
+3. 创建数据库和用户，克隆代码，pip install 依赖
 4. 配置 systemd 服务（Gunicorn）
 5. 配置 Nginx 反向代理
 6. 购买域名 (.top)，DNS 解析到服务器 IP
@@ -121,7 +121,7 @@ Nginx (80/443) → Gunicorn → Flask App → SQLite
 |------|------|
 | 服务器 | ¥88/年 (腾讯云轻量新用户) |
 | 域名 | ¥9/年 (.top) |
-| 数据库 | ¥0 (SQLite) |
+| 数据库 | ¥0 (服务器自建 MySQL) |
 | 邮箱 | ¥0 (QQ SMTP) |
 | SSL | ¥0 (Let's Encrypt) |
 | **首年总计** | **≈ ¥97** |
