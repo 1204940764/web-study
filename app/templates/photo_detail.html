@@ -51,7 +51,7 @@
                     {% if current_user.is_authenticated and (current_user.id == comment.user_id or current_user.is_admin) %}
                     <form method="POST" action="/comment/{{ comment.id }}/delete"
                           onsubmit="return confirm('确定删除这条评论？')" class="ml-auto">
-                        <button type="submit" class="text-xs text-gray-300 hover:text-red-500 transition">删除</button>
+                        <button type="submit" class="text-sm text-gray-500 hover:text-red-600 transition font-medium">删除</button>
                     </form>
                     {% endif %}
                 </div>

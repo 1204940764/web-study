@@ -29,4 +29,19 @@ def create_app(config_class=Config):
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
+    from app.models import Announcement, AnnouncementView
+    from flask_login import current_user
+
+    @app.context_processor
+    def inject_unread_announcement():
+        if current_user.is_authenticated:
+            latest = Announcement.query.order_by(Announcement.created_at.desc()).first()
+            if latest:
+                seen = AnnouncementView.query.filter_by(
+                    user_id=current_user.id, announcement_id=latest.id
+                ).first()
+                if not seen:
+                    return {'unread_announcement': latest}
+        return {'unread_announcement': None}
+
     return app

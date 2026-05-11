@@ -58,6 +58,15 @@ class Announcement(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+class AnnouncementView(db.Model):
+    __tablename__ = 'announcement_views'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    announcement_id = db.Column(db.Integer, db.ForeignKey('announcements.id'), nullable=False)
+    seen_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 class EmailVerification(db.Model):
     __tablename__ = 'email_verifications'
 

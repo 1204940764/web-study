@@ -45,57 +45,5 @@
 </div>
 {% endif %}
 
-<!-- 公告弹窗 -->
-{% if announcement %}
-<div id="announcement-overlay"
-     class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm"
-     data-ann-id="{{ announcement.id }}">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden"
-         style="box-shadow: 0 25px 60px -15px rgba(0,0,0,0.2);">
-        <div class="bg-gradient-to-r from-nature-600 to-nature-700 px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 4.4-7 11-7 11S5 13.4 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-                <span class="text-white font-bold text-lg tracking-tight">公告</span>
-            </div>
-            <button onclick="dismissAnnouncement()" class="text-white/70 hover:text-white transition">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        </div>
-        <div class="p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-3">{{ announcement.title }}</h3>
-            <p class="text-gray-600 leading-relaxed whitespace-pre-wrap">{{ announcement.content }}</p>
-            <p class="text-xs text-gray-400 mt-4">{{ announcement.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-        </div>
-        <div class="px-6 pb-5">
-            <button onclick="dismissAnnouncement()"
-                    class="w-full bg-nature-500 text-white py-2.5 rounded-xl hover:bg-nature-600 font-medium transition active:scale-[0.98]">
-                我知道了
-            </button>
-        </div>
-    </div>
-</div>
 
-<script>
-function dismissAnnouncement() {
-    var overlay = document.getElementById('announcement-overlay');
-    if (!overlay) return;
-    var annId = overlay.getAttribute('data-ann-id');
-    var seen = JSON.parse(localStorage.getItem('seen_announcements') || '[]');
-    if (seen.indexOf(annId) === -1) seen.push(annId);
-    localStorage.setItem('seen_announcements', JSON.stringify(seen));
-    overlay.remove();
-}
-
-// 检查是否已看过此公告
-(function() {
-    var overlay = document.getElementById('announcement-overlay');
-    if (!overlay) return;
-    var annId = overlay.getAttribute('data-ann-id');
-    var seen = JSON.parse(localStorage.getItem('seen_announcements') || '[]');
-    if (seen.indexOf(annId) !== -1) {
-        overlay.remove();
-    }
-})();
-</script>
-{% endif %}
 {% endblock %}

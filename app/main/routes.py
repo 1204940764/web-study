@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
-from app.models import Photo, Comment, Announcement
+from flask_login import login_required, current_user
+from app.extensions import db
+from app.models import Photo, Comment, Announcement, AnnouncementView
 
 main_bp = Blueprint('main', __name__)
 
@@ -10,8 +12,19 @@ def index():
     photos = Photo.query.filter_by(status='approved')\
         .order_by(Photo.created_at.desc())\
         .paginate(page=page, per_page=20)
-    latest_ann = Announcement.query.order_by(Announcement.created_at.desc()).first()
-    return render_template('index.html', photos=photos, announcement=latest_ann)
+    return render_template('index.html', photos=photos)
+
+
+@main_bp.route('/announcement/<int:ann_id>/read', methods=['POST'])
+@login_required
+def mark_announcement_read(ann_id):
+    exists = AnnouncementView.query.filter_by(
+        user_id=current_user.id, announcement_id=ann_id
+    ).first()
+    if not exists:
+        db.session.add(AnnouncementView(user_id=current_user.id, announcement_id=ann_id))
+        db.session.commit()
+    return {'ok': True}
 
 
 @main_bp.route('/photo/<int:photo_id>')
