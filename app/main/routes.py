@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, request
-from app.models import Photo, Comment
+from flask import Blueprint, render_template, request, jsonify
+from app.models import Photo, Comment, Announcement
 
 main_bp = Blueprint('main', __name__)
 
@@ -10,7 +10,8 @@ def index():
     photos = Photo.query.filter_by(status='approved')\
         .order_by(Photo.created_at.desc())\
         .paginate(page=page, per_page=20)
-    return render_template('index.html', photos=photos)
+    latest_ann = Announcement.query.order_by(Announcement.created_at.desc()).first()
+    return render_template('index.html', photos=photos, announcement=latest_ann)
 
 
 @main_bp.route('/photo/<int:photo_id>')

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import User, Photo, Comment
+from app.models import User, Photo, Comment, Announcement
 from app.decorators import admin_required
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -11,15 +11,13 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 @login_required
 @admin_required
 def dashboard():
-    user_count = User.query.count()
-    photo_count = Photo.query.count()
-    comment_count = Comment.query.count()
-    pending_count = Photo.query.filter_by(status='pending').count()
+    ann_count = Announcement.query.count()
     return render_template('admin/dashboard.html',
-                           user_count=user_count,
-                           photo_count=photo_count,
-                           comment_count=comment_count,
-                           pending_count=pending_count)
+                           user_count=User.query.count(),
+                           photo_count=Photo.query.count(),
+                           comment_count=Comment.query.count(),
+                           pending_count=Photo.query.filter_by(status='pending').count(),
+                           ann_count=ann_count)
 
 
 @admin_bp.route('/users')
@@ -94,3 +92,36 @@ def delete_comment(comment_id):
     db.session.commit()
     flash('评论已删除', 'success')
     return redirect(url_for('admin.comments'))
+
+
+@admin_bp.route('/announcements')
+@login_required
+@admin_required
+def announcements():
+    anns = Announcement.query.order_by(Announcement.created_at.desc()).all()
+    return render_template('admin/announcements.html', announcements=anns)
+
+
+@admin_bp.route('/announcements/create', methods=['POST'])
+@login_required
+@admin_required
+def create_announcement():
+    title = request.form.get('title', '').strip()
+    content = request.form.get('content', '').strip()
+    if title and content:
+        ann = Announcement(title=title, content=content)
+        db.session.add(ann)
+        db.session.commit()
+        flash('公告已发布', 'success')
+    return redirect(url_for('admin.announcements'))
+
+
+@admin_bp.route('/announcements/<int:ann_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_announcement(ann_id):
+    ann = Announcement.query.get_or_404(ann_id)
+    db.session.delete(ann)
+    db.session.commit()
+    flash('公告已删除', 'success')
+    return redirect(url_for('admin.announcements'))

@@ -37,10 +37,11 @@
     <!-- 导航栏 -->
     <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-green-100">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="/" class="text-2xl font-bold text-nature-700 flex items-center gap-2">
-                🌿 光影记录
+            <a href="/" class="text-3xl font-bold text-nature-700 tracking-tight flex items-center gap-2">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8c0-5-4-9-9-9C2 1.5 1.5 4 1 6.5"/><circle cx="12" cy="12" r="3"/><path d="M12 15c0 5 4 9 9 9 6-1.5 6.5-4 7-6.5"/></svg>
+                光影记录
             </a>
-            <div class="flex items-center gap-4 text-sm">
+            <div class="flex items-center gap-5 text-base font-medium">
                 <a href="/" class="text-gray-600 hover:text-nature-600 font-medium">首页</a>
                 <a href="/search" class="text-gray-600 hover:text-nature-600 font-medium">🔍 搜索</a>
                 {% if current_user.is_authenticated %}
@@ -53,8 +54,8 @@
                 <span class="text-gray-500">{{ current_user.username or current_user.email }}</span>
                 <a href="/logout" class="text-gray-400 hover:text-red-500">退出</a>
                 {% else %}
-                <a href="/login" class="bg-nature-500 text-white px-4 py-1.5 rounded-full hover:bg-nature-600 font-medium">登录</a>
-                <a href="/register" class="border border-nature-500 text-nature-600 px-4 py-1.5 rounded-full hover:bg-nature-50 font-medium">注册</a>
+                <a href="/login" class="bg-nature-500 text-white px-5 py-2 rounded-full hover:bg-nature-600 font-semibold transition active:scale-[0.98]">登录</a>
+                <a href="/register" class="border-2 border-nature-500 text-nature-600 px-5 py-2 rounded-full hover:bg-nature-50 font-semibold transition">注册</a>
                 {% endif %}
             </div>
         </div>
@@ -283,11 +284,38 @@
         };
     }
 
-    // 初始化 (分散在屏幕各处 + 上方)
+    // 初始化: 先从 sessionStorage 恢复，失败则创建并分散全屏
     var totalLeaves = 50;
-    for (var i = 0; i < totalLeaves; i++) {
-        leaves.push(createLeaf(-80 - Math.random() * h * 0.5));
+    var storedState = sessionStorage.getItem('leafState');
+    var restored = false;
+    if (storedState) {
+        try {
+            var restoredLeaves = JSON.parse(storedState);
+            if (restoredLeaves.length === totalLeaves) {
+                leaves = restoredLeaves;
+                restored = true;
+            }
+        } catch(e) {}
     }
+    if (!restored) {
+        for (var i = 0; i < totalLeaves; i++) {
+            leaves.push(createLeaf(Math.random() * h));
+        }
+    }
+
+    // 离开页面时保存叶子状态
+    function saveLeafState() {
+        var state = leaves.map(function(l) {
+            return { x: l.x, y: l.y, size: l.size, depthScale: l.depthScale,
+                     speed: l.speed, rotation: l.rotation, rotSpeed: l.rotSpeed,
+                     swayPhase: l.swayPhase, swayAmp: l.swayAmp, swayFreq: l.swayFreq,
+                     floatPhase: l.floatPhase, floatAmp: l.floatAmp,
+                     opacity: l.opacity, c1: l.c1, c2: l.c2, type: l.type, wobble: l.wobble };
+        });
+        sessionStorage.setItem('leafState', JSON.stringify(state));
+    }
+    window.addEventListener('beforeunload', saveLeafState);
+    setInterval(saveLeafState, 3000);
 
     // ---- 阵风系统 ----
     function updateGust(dt) {
