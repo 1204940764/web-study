@@ -89,7 +89,7 @@
     var canvas = document.getElementById('leaf-canvas');
     var ctx = canvas.getContext('2d');
     var w, h;
-    var leaves = [];
+    var flakes = [];
     var globalTime = 0;
     var gust = { active: false, strength: 0, direction: 0, timer: 0, cooldown: 0 };
 
@@ -100,271 +100,134 @@
     resize();
     window.addEventListener('resize', resize);
 
-    // ---- 真实叶形绘制 ----
+    // ---- 雪花绘制 ----
 
-    // 柳叶形 (椭圆尖叶 - 绿色为主)
-    function drawWillowLeaf(ctx, s, c1, c2) {
-        var g = ctx.createLinearGradient(0, -s, 0, s);
-        g.addColorStop(0, c1);
-        g.addColorStop(0.5, c2);
-        g.addColorStop(1, c1);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.moveTo(0, -s);
-        ctx.bezierCurveTo(s * 0.45, -s * 0.6, s * 0.35, s * 0.5, 0, s);
-        ctx.bezierCurveTo(-s * 0.35, s * 0.5, -s * 0.45, -s * 0.6, 0, -s);
-        ctx.fill();
-        // 主叶脉
-        ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-        ctx.lineWidth = s * 0.04;
-        ctx.beginPath();
-        ctx.moveTo(0, -s * 0.85);
-        ctx.lineTo(0, s * 0.8);
-        ctx.stroke();
-        // 侧脉
-        ctx.lineWidth = s * 0.02;
-        for (var i = -3; i <= 3; i++) {
-            if (i === 0) continue;
-            var py = i * s * 0.2;
-            ctx.beginPath();
-            ctx.moveTo(0, py);
-            ctx.lineTo(s * 0.25 * (i > 0 ? 1 : -1), py + s * 0.08);
-            ctx.stroke();
-        }
-    }
+    function drawFlake(ctx, s, opacity) {
+        // 六角雪花主体
+        ctx.strokeStyle = 'rgba(255,255,255,' + (opacity * 0.9) + ')';
+        ctx.fillStyle = 'rgba(255,255,255,' + (opacity * 0.55) + ')';
+        ctx.lineWidth = s * 0.06;
 
-    // 心形叶 (菩提/紫荆风格)
-    function drawHeartLeaf(ctx, s, c1, c2) {
-        var g = ctx.createLinearGradient(-s * 0.3, -s * 0.3, s * 0.3, s * 0.3);
-        g.addColorStop(0, c1);
-        g.addColorStop(1, c2);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.moveTo(0, s * 0.7);
-        ctx.bezierCurveTo(-s * 0.8, s * 0.1, -s * 0.8, -s * 0.5, 0, -s * 0.2);
-        ctx.bezierCurveTo(s * 0.8, -s * 0.5, s * 0.8, s * 0.1, 0, s * 0.7);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-        ctx.lineWidth = s * 0.035;
-        ctx.beginPath();
-        ctx.moveTo(0, s * 0.6);
-        ctx.lineTo(0, -s * 0.1);
-        ctx.stroke();
-    }
+        for (var b = 0; b < 6; b++) {
+            var angle = (Math.PI / 3) * b;
+            ctx.save();
+            ctx.rotate(angle);
 
-    // 枫叶 (五裂 - 秋天色系)
-    function drawMapleLeaf(ctx, s, c1, c2) {
-        var g = ctx.createRadialGradient(0, 0, s * 0.1, 0, 0, s);
-        g.addColorStop(0, c1);
-        g.addColorStop(1, c2);
-        ctx.fillStyle = g;
-
-        var lobes = [
-            { angle: -Math.PI / 2, len: 1.0, w: 0.28 },
-            { angle: -Math.PI / 6, len: 0.65, w: 0.18 },
-            { angle: Math.PI / 3, len: 0.55, w: 0.16 },
-            { angle: Math.PI, len: 0.5, w: 0.14 },
-            { angle: -Math.PI * 2 / 3, len: 0.5, w: 0.14 }
-        ];
-
-        ctx.beginPath();
-        var first = true;
-        for (var li = 0; li < lobes.length; li++) {
-            var a = lobes[li].angle;
-            var tipX = Math.cos(a) * s * lobes[li].len;
-            var tipY = Math.sin(a) * s * lobes[li].len;
-            var wa = lobes[li].w;
-            var midX = Math.cos(a) * s * 0.3;
-            var midY = Math.sin(a) * s * 0.3;
-
-            if (first) {
-                ctx.moveTo(0, -s * 0.08);
-                first = false;
-            }
-            ctx.lineTo(midX + Math.cos(a + Math.PI / 2) * s * wa * 0.3,
-                      midY + Math.sin(a + Math.PI / 2) * s * wa * 0.3);
-            ctx.lineTo(tipX, tipY);
-            ctx.lineTo(midX + Math.cos(a - Math.PI / 2) * s * wa * 0.3,
-                      midY + Math.sin(a - Math.PI / 2) * s * wa * 0.3);
-        }
-        ctx.closePath();
-        ctx.fill();
-
-        // 叶脉
-        ctx.strokeStyle = 'rgba(0,0,0,0.13)';
-        ctx.lineWidth = s * 0.025;
-        for (var li = 0; li < lobes.length; li++) {
-            var a = lobes[li].angle;
+            // 主枝
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.lineTo(Math.cos(a) * s * (lobes[li].len - 0.1),
-                       Math.sin(a) * s * (lobes[li].len - 0.1));
+            ctx.lineTo(s, 0);
             ctx.stroke();
+
+            // 分支 (近尖端)
+            var bx = s * 0.65;
+            ctx.beginPath();
+            ctx.moveTo(bx, 0);
+            ctx.lineTo(bx + s * 0.22, -s * 0.15);
+            ctx.moveTo(bx, 0);
+            ctx.lineTo(bx + s * 0.22, s * 0.15);
+            ctx.stroke();
+
+            // 分支 (中部)
+            bx = s * 0.35;
+            ctx.beginPath();
+            ctx.moveTo(bx, 0);
+            ctx.lineTo(bx + s * 0.18, -s * 0.12);
+            ctx.moveTo(bx, 0);
+            ctx.lineTo(bx + s * 0.18, s * 0.12);
+            ctx.stroke();
+
+            // 中心小圆
+            ctx.fillStyle = 'rgba(255,255,255,' + (opacity * 0.7) + ')';
+            ctx.beginPath();
+            ctx.arc(0, 0, s * 0.1, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
         }
     }
 
-    // 锯齿椭圆叶
-    function drawSerratedLeaf(ctx, s, c1, c2) {
-        var g = ctx.createLinearGradient(0, -s, 0, s);
-        g.addColorStop(0, c1);
-        g.addColorStop(1, c2);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        var teeth = 14;
-        for (var i = 0; i <= teeth; i++) {
-            var t = i / teeth;
-            var angle = Math.PI * t;
-            var rx = Math.sin(angle) * s * 0.42;
-            var ry = -Math.cos(angle) * s;
-            var jitter = (i % 2 === 0) ? 1 : 1.12;
-            if (i > 0) ctx.lineTo(rx * jitter, ry);
-        }
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-        ctx.lineWidth = s * 0.035;
-        ctx.beginPath();
-        ctx.moveTo(0, -s * 0.9);
-        ctx.lineTo(0, s * 0.85);
-        ctx.stroke();
-    }
+    // ---- 创建雪花 ----
 
-    // ---- 调色板 ----
-    var greenPairs = [
-        ['#5ca904', '#3a7d0c'], ['#6dbd28', '#408a14'],
-        ['#4c9a1e', '#2d6b0c'], ['#78c83a', '#50941e'],
-        ['#8cc63f', '#5a9228'], ['#3e8510', '#1e5a04']
-    ];
-    var autumnPairs = [
-        ['#e8652a', '#c24418'], ['#d4382e', '#9e1f1c'],
-        ['#f08a3e', '#d45a20'], ['#e8a838', '#c07a1e'],
-        ['#d4523a', '#a82e1e'], ['#f47b4a', '#cc4a22'],
-        ['#e09838', '#b8701e'], ['#c84030', '#8e1c14']
-    ];
-
-    // ---- 叶子对象 ----
-
-    function createLeaf(resetY) {
-        var types = ['willow', 'willow', 'willow', 'maple', 'maple', 'heart', 'serrated'];
-        var type = types[Math.floor(Math.random() * types.length)];
-        var isAutumn = type === 'maple' ? Math.random() < 0.85 : Math.random() < 0.3;
-        var pairs = isAutumn ? autumnPairs : greenPairs;
-        var pair = pairs[Math.floor(Math.random() * pairs.length)];
-
-        // 三层景深
+    function createFlake(resetY) {
         var depth = Math.random();
         var depthScale;
-        if (depth < 0.3) {
-            depthScale = 0.45;  // 远景: 小、慢、淡
-        } else if (depth < 0.75) {
-            depthScale = 0.75;  // 中景
+        if (depth < 0.25) {
+            depthScale = 0.4;
+        } else if (depth < 0.7) {
+            depthScale = 0.7;
         } else {
-            depthScale = 1.0;   // 近景: 大、快、浓
+            depthScale = 1.0;
         }
 
-        var baseSize = 12 + Math.random() * 22;
         return {
-            type: type,
             x: Math.random() * w,
             y: (typeof resetY === 'number') ? resetY : Math.random() * h,
-            size: baseSize * depthScale,
+            size: (4 + Math.random() * 12) * depthScale,
             depthScale: depthScale,
-            speed: (0.25 + Math.random() * 0.7) * depthScale,
+            speed: (0.2 + Math.random() * 0.5) * depthScale,
             rotation: Math.random() * Math.PI * 2,
-            rotSpeed: (Math.random() - 0.5) * 0.018,
+            rotSpeed: (Math.random() - 0.5) * 0.01,
             swayPhase: Math.random() * Math.PI * 2,
-            swayAmp: 0.25 + Math.random() * 0.8,
-            swayFreq: 0.003 + Math.random() * 0.008,
+            swayAmp: 0.3 + Math.random() * 1.0,
+            swayFreq: 0.002 + Math.random() * 0.006,
             floatPhase: Math.random() * Math.PI * 2,
-            floatAmp: 0.15 + Math.random() * 0.35,
-            opacity: (0.35 + Math.random() * 0.4) * (0.5 + depthScale * 0.5),
-            c1: pair[0],
-            c2: pair[1],
-            wobble: Math.random() * 0.015
+            floatAmp: 0.1 + Math.random() * 0.3,
+            opacity: (0.08 + Math.random() * 0.2) * (0.4 + depthScale * 0.6)
         };
     }
 
-    // 初始化: 先从 sessionStorage 恢复，失败则创建并分散全屏
-    var totalLeaves = 50;
-    var storedState = sessionStorage.getItem('leafState');
+    // 初始化
+    var totalFlakes = 60;
+    var storedState = sessionStorage.getItem('flakeState');
     var restored = false;
     if (storedState) {
         try {
-            var restoredLeaves = JSON.parse(storedState);
-            if (restoredLeaves.length === totalLeaves) {
-                leaves = restoredLeaves;
+            var restoredFlakes = JSON.parse(storedState);
+            if (restoredFlakes.length === totalFlakes) {
+                flakes = restoredFlakes;
                 restored = true;
             }
         } catch(e) {}
     }
     if (!restored) {
-        for (var i = 0; i < totalLeaves; i++) {
-            leaves.push(createLeaf(Math.random() * h));
+        for (var i = 0; i < totalFlakes; i++) {
+            flakes.push(createFlake(Math.random() * h));
         }
     }
 
-    // 离开页面时保存叶子状态
-    function saveLeafState() {
-        var state = leaves.map(function(l) {
-            return { x: l.x, y: l.y, size: l.size, depthScale: l.depthScale,
-                     speed: l.speed, rotation: l.rotation, rotSpeed: l.rotSpeed,
-                     swayPhase: l.swayPhase, swayAmp: l.swayAmp, swayFreq: l.swayFreq,
-                     floatPhase: l.floatPhase, floatAmp: l.floatAmp,
-                     opacity: l.opacity, c1: l.c1, c2: l.c2, type: l.type, wobble: l.wobble };
+    function saveFlakeState() {
+        var state = flakes.map(function(f) {
+            return { x: f.x, y: f.y, size: f.size, depthScale: f.depthScale,
+                     speed: f.speed, rotation: f.rotation, rotSpeed: f.rotSpeed,
+                     swayPhase: f.swayPhase, swayAmp: f.swayAmp, swayFreq: f.swayFreq,
+                     floatPhase: f.floatPhase, floatAmp: f.floatAmp, opacity: f.opacity };
         });
-        sessionStorage.setItem('leafState', JSON.stringify(state));
+        sessionStorage.setItem('flakeState', JSON.stringify(state));
     }
-    window.addEventListener('beforeunload', saveLeafState);
-    setInterval(saveLeafState, 3000);
+    window.addEventListener('beforeunload', saveFlakeState);
+    setInterval(saveFlakeState, 3000);
 
-    // ---- 阵风系统 ----
+    // ---- 阵风 ----
     function updateGust(dt) {
         if (gust.active) {
             gust.timer -= dt;
             if (gust.timer <= 0) {
                 gust.active = false;
-                gust.cooldown = 4000 + Math.random() * 8000;
+                gust.cooldown = 6000 + Math.random() * 10000;
                 gust.strength = 0;
             } else {
-                var progress = gust.timer / 3000;
-                gust.strength = Math.sin(progress * Math.PI) * (1.5 + Math.random() * 2);
+                var p = gust.timer / 3500;
+                gust.strength = Math.sin(p * Math.PI) * (1.2 + Math.random() * 1.5);
             }
         } else {
             gust.cooldown -= dt;
             if (gust.cooldown <= 0) {
                 gust.active = true;
-                gust.timer = 2500 + Math.random() * 2000;
-                gust.direction = (Math.random() - 0.5) * 1.6;
+                gust.timer = 3000 + Math.random() * 2500;
+                gust.direction = (Math.random() - 0.5) * 1.4;
             }
         }
-    }
-
-    // ---- 绘制叶柄和叶片 ----
-    var leafDrawers = {
-        willow: drawWillowLeaf,
-        heart: drawHeartLeaf,
-        maple: drawMapleLeaf,
-        serrated: drawSerratedLeaf
-    };
-
-    function drawLeaf(l) {
-        ctx.save();
-        ctx.translate(l.x, l.y);
-        ctx.rotate(l.rotation);
-        ctx.scale(1, 1);
-
-        // 叶片主体
-        leafDrawers[l.type](ctx, l.size, l.c1, l.c2);
-
-        // 叶柄
-        ctx.strokeStyle = '#8b7355';
-        ctx.lineWidth = l.size * 0.05;
-        ctx.beginPath();
-        ctx.moveTo(0, l.size * 0.72);
-        ctx.quadraticCurveTo(l.size * 0.08, l.size * 0.9, l.size * 0.12, l.size * 1.1);
-        ctx.stroke();
-
-        ctx.restore();
     }
 
     // ---- 主循环 ----
@@ -380,36 +243,27 @@
         updateGust(dt);
         ctx.clearRect(0, 0, w, h);
 
-        for (var i = 0; i < leaves.length; i++) {
-            var l = leaves[i];
+        for (var i = 0; i < flakes.length; i++) {
+            var f = flakes[i];
 
-            // 垂直降落 (雪花般的缓慢飘落)
-            l.y += l.speed * (dt / 16);
+            f.y += f.speed * (dt / 16);
+            var sway = Math.sin(globalTime * f.swayFreq + f.swayPhase) * f.swayAmp;
+            sway += gust.strength * gust.direction * f.depthScale * 0.6;
+            f.x += sway * (dt / 16);
+            f.y += Math.sin(globalTime * 0.0018 + f.floatPhase) * f.floatAmp * (dt / 16);
+            f.rotation += f.rotSpeed * (dt / 16);
 
-            // 水平摇摆 (正弦 + 阵风)
-            var sway = Math.sin(globalTime * l.swayFreq + l.swayPhase) * l.swayAmp;
-            sway += gust.strength * gust.direction * l.depthScale;
-            l.x += sway * (dt / 16);
+            if (f.y > h + 40) { f.y = -40; f.x = Math.random() * w; }
+            if (f.x < -50) f.x = w + 50;
+            if (f.x > w + 50) f.x = -50;
 
-            // 竖直微浮动 (模拟雪花轻盈感)
-            l.y += Math.sin(globalTime * 0.002 + l.floatPhase) * l.floatAmp * (dt / 16);
-
-            // 旋转
-            l.rotation += l.rotSpeed * (dt / 16) + l.wobble * Math.sin(globalTime * 0.003 + l.floatPhase) * (dt / 16);
-
-            // 出界回收
-            if (l.y > h + 50) {
-                l.y = -50;
-                l.x = Math.random() * w;
-            }
-            if (l.x < -70) l.x = w + 70;
-            if (l.x > w + 70) l.x = -70;
-
-            // 绘制
-            ctx.globalAlpha = l.opacity;
-            drawLeaf(l);
+            ctx.globalAlpha = 1;
+            ctx.save();
+            ctx.translate(f.x, f.y);
+            ctx.rotate(f.rotation);
+            drawFlake(ctx, f.size, f.opacity);
+            ctx.restore();
         }
-        ctx.globalAlpha = 1;
     }
 
     requestAnimationFrame(animate);
