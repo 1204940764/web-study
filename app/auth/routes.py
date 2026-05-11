@@ -88,3 +88,52 @@ def logout():
     logout_user()
     flash('已退出登录', 'success')
     return redirect(url_for('main.index'))
+
+
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        new_pw = request.form.get('new_password', '').strip()
+        code = request.form.get('code', '').strip()
+
+        error = None
+        if not email or '@' not in email:
+            error = '请输入有效的邮箱地址'
+        elif not User.query.filter_by(email=email).first():
+            error = '该邮箱未注册'
+        elif len(new_pw) < 6:
+            error = '密码至少 6 位'
+        elif not code:
+            error = '请输入验证码'
+        else:
+            v = EmailVerification.valid_code(email, code)
+            if not v:
+                error = '验证码错误或已过期'
+
+        if error:
+            flash(error, 'error')
+        else:
+            user = User.query.filter_by(email=email).first()
+            user.set_password(new_pw)
+            v.mark_used()
+            db.session.commit()
+            flash('密码重置成功，请登录', 'success')
+            return redirect(url_for('auth.login'))
+
+    return render_template('forgot_password.html')
+
+
+@auth_bp.route('/forgot-password/send-code', methods=['POST'])
+def send_forgot_code():
+    email = request.form.get('email', '').strip()
+    if not email or not User.query.filter_by(email=email).first():
+        return {'ok': False, 'msg': '该邮箱未注册'}
+    try:
+        send_verification_email(email)
+        return {'ok': True}
+    except Exception as e:
+        return {'ok': False, 'msg': '发送失败，请检查邮件服务配置'}

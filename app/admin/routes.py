@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import User, Photo, Comment, Announcement
+from app.models import User, Photo, Comment, Announcement, AnnouncementView
 from app.decorators import admin_required
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -121,6 +121,7 @@ def create_announcement():
 @admin_required
 def delete_announcement(ann_id):
     ann = Announcement.query.get_or_404(ann_id)
+    AnnouncementView.query.filter_by(announcement_id=ann_id).delete()
     db.session.delete(ann)
     db.session.commit()
     flash('公告已删除', 'success')
