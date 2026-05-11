@@ -54,3 +54,17 @@ def add_comment(photo_id):
         flash('评论发表成功', 'success')
 
     return redirect(url_for('main.photo_detail', photo_id=photo_id))
+
+
+@photos_bp.route('/comment/<int:comment_id>/delete', methods=['POST'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    photo_id = comment.photo_id
+    if current_user.id != comment.user_id and not current_user.is_admin:
+        flash('无权删除此评论', 'error')
+        return redirect(url_for('main.photo_detail', photo_id=photo_id))
+    db.session.delete(comment)
+    db.session.commit()
+    flash('评论已删除', 'success')
+    return redirect(url_for('main.photo_detail', photo_id=photo_id))

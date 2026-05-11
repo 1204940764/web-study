@@ -48,6 +48,12 @@
                     <span class="font-semibold text-gray-700">{{ comment.author.username or comment.author.email }}</span>
                     <span class="text-gray-300">·</span>
                     <span class="text-gray-400">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    {% if current_user.is_authenticated and (current_user.id == comment.user_id or current_user.is_admin) %}
+                    <form method="POST" action="/comment/{{ comment.id }}/delete"
+                          onsubmit="return confirm('确定删除这条评论？')" class="ml-auto">
+                        <button type="submit" class="text-xs text-gray-300 hover:text-red-500 transition">删除</button>
+                    </form>
+                    {% endif %}
                 </div>
                 <p class="text-gray-600 mt-1">{{ comment.content }}</p>
             </div>
