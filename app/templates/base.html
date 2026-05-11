@@ -85,10 +85,12 @@
 
 <script>
 (function() {
-    const canvas = document.getElementById('leaf-canvas');
-    const ctx = canvas.getContext('2d');
-    let w, h;
-    let leaves = [];
+    var canvas = document.getElementById('leaf-canvas');
+    var ctx = canvas.getContext('2d');
+    var w, h;
+    var leaves = [];
+    var globalTime = 0;
+    var gust = { active: false, strength: 0, direction: 0, timer: 0, cooldown: 0 };
 
     function resize() {
         w = canvas.width = window.innerWidth;
@@ -97,119 +99,292 @@
     resize();
     window.addEventListener('resize', resize);
 
-    const LEAF_COUNT = 35;
+    // ---- 真实叶形绘制 ----
 
-    // 树叶形状绘制函数
-    function drawLeaf(ctx, x, y, size, rotation, color) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(rotation);
-        ctx.fillStyle = color;
+    // 柳叶形 (椭圆尖叶 - 绿色为主)
+    function drawWillowLeaf(ctx, s, c1, c2) {
+        var g = ctx.createLinearGradient(0, -s, 0, s);
+        g.addColorStop(0, c1);
+        g.addColorStop(0.5, c2);
+        g.addColorStop(1, c1);
+        ctx.fillStyle = g;
         ctx.beginPath();
-        // 画树叶形状
-        ctx.moveTo(0, -size);
-        ctx.bezierCurveTo(size * 0.5, -size * 0.5, size * 0.6, 0, 0, size);
-        ctx.bezierCurveTo(-size * 0.6, 0, -size * 0.5, -size * 0.5, 0, -size);
+        ctx.moveTo(0, -s);
+        ctx.bezierCurveTo(s * 0.45, -s * 0.6, s * 0.35, s * 0.5, 0, s);
+        ctx.bezierCurveTo(-s * 0.35, s * 0.5, -s * 0.45, -s * 0.6, 0, -s);
         ctx.fill();
-        // 叶脉
-        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-        ctx.lineWidth = 0.5;
+        // 主叶脉
+        ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+        ctx.lineWidth = s * 0.04;
         ctx.beginPath();
-        ctx.moveTo(0, -size * 0.8);
-        ctx.lineTo(0, size * 0.7);
+        ctx.moveTo(0, -s * 0.85);
+        ctx.lineTo(0, s * 0.8);
         ctx.stroke();
-        ctx.restore();
+        // 侧脉
+        ctx.lineWidth = s * 0.02;
+        for (var i = -3; i <= 3; i++) {
+            if (i === 0) continue;
+            var py = i * s * 0.2;
+            ctx.beginPath();
+            ctx.moveTo(0, py);
+            ctx.lineTo(s * 0.25 * (i > 0 ? 1 : -1), py + s * 0.08);
+            ctx.stroke();
+        }
     }
 
-    // 枫叶形状绘制函数
-    function drawMapleLeaf(ctx, x, y, size, rotation, color) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(rotation);
-        ctx.fillStyle = color;
+    // 心形叶 (菩提/紫荆风格)
+    function drawHeartLeaf(ctx, s, c1, c2) {
+        var g = ctx.createLinearGradient(-s * 0.3, -s * 0.3, s * 0.3, s * 0.3);
+        g.addColorStop(0, c1);
+        g.addColorStop(1, c2);
+        ctx.fillStyle = g;
         ctx.beginPath();
-        // 五角枫叶
-        const s = size;
-        ctx.moveTo(0, -s);
-        ctx.lineTo(s * 0.3, -s * 0.4);
-        ctx.lineTo(s * 0.9, -s * 0.5);
-        ctx.lineTo(s * 0.45, -s * 0.05);
-        ctx.lineTo(s * 0.6, s * 0.5);
-        ctx.lineTo(0, s * 0.15);
-        ctx.lineTo(-s * 0.6, s * 0.5);
-        ctx.lineTo(-s * 0.45, -s * 0.05);
-        ctx.lineTo(-s * 0.9, -s * 0.5);
-        ctx.lineTo(-s * 0.3, -s * 0.4);
+        ctx.moveTo(0, s * 0.7);
+        ctx.bezierCurveTo(-s * 0.8, s * 0.1, -s * 0.8, -s * 0.5, 0, -s * 0.2);
+        ctx.bezierCurveTo(s * 0.8, -s * 0.5, s * 0.8, s * 0.1, 0, s * 0.7);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+        ctx.lineWidth = s * 0.035;
+        ctx.beginPath();
+        ctx.moveTo(0, s * 0.6);
+        ctx.lineTo(0, -s * 0.1);
+        ctx.stroke();
+    }
+
+    // 枫叶 (五裂 - 秋天色系)
+    function drawMapleLeaf(ctx, s, c1, c2) {
+        var g = ctx.createRadialGradient(0, 0, s * 0.1, 0, 0, s);
+        g.addColorStop(0, c1);
+        g.addColorStop(1, c2);
+        ctx.fillStyle = g;
+
+        var lobes = [
+            { angle: -Math.PI / 2, len: 1.0, w: 0.28 },
+            { angle: -Math.PI / 6, len: 0.65, w: 0.18 },
+            { angle: Math.PI / 3, len: 0.55, w: 0.16 },
+            { angle: Math.PI, len: 0.5, w: 0.14 },
+            { angle: -Math.PI * 2 / 3, len: 0.5, w: 0.14 }
+        ];
+
+        ctx.beginPath();
+        var first = true;
+        for (var li = 0; li < lobes.length; li++) {
+            var a = lobes[li].angle;
+            var tipX = Math.cos(a) * s * lobes[li].len;
+            var tipY = Math.sin(a) * s * lobes[li].len;
+            var wa = lobes[li].w;
+            var midX = Math.cos(a) * s * 0.3;
+            var midY = Math.sin(a) * s * 0.3;
+
+            if (first) {
+                ctx.moveTo(0, -s * 0.08);
+                first = false;
+            }
+            ctx.lineTo(midX + Math.cos(a + Math.PI / 2) * s * wa * 0.3,
+                      midY + Math.sin(a + Math.PI / 2) * s * wa * 0.3);
+            ctx.lineTo(tipX, tipY);
+            ctx.lineTo(midX + Math.cos(a - Math.PI / 2) * s * wa * 0.3,
+                      midY + Math.sin(a - Math.PI / 2) * s * wa * 0.3);
+        }
         ctx.closePath();
         ctx.fill();
-        ctx.restore();
+
+        // 叶脉
+        ctx.strokeStyle = 'rgba(0,0,0,0.13)';
+        ctx.lineWidth = s * 0.025;
+        for (var li = 0; li < lobes.length; li++) {
+            var a = lobes[li].angle;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(a) * s * (lobes[li].len - 0.1),
+                       Math.sin(a) * s * (lobes[li].len - 0.1));
+            ctx.stroke();
+        }
     }
 
-    // 颜色定义
-    const greenColors = ['#22c55e', '#16a34a', '#4ade80', '#15803d', '#86efac'];
-    const autumnColors = ['#ea580c', '#dc2626', '#f97316', '#eab308', '#b91c1c', '#fb923c', '#facc15', '#d97706'];
+    // 锯齿椭圆叶
+    function drawSerratedLeaf(ctx, s, c1, c2) {
+        var g = ctx.createLinearGradient(0, -s, 0, s);
+        g.addColorStop(0, c1);
+        g.addColorStop(1, c2);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        var teeth = 14;
+        for (var i = 0; i <= teeth; i++) {
+            var t = i / teeth;
+            var angle = Math.PI * t;
+            var rx = Math.sin(angle) * s * 0.42;
+            var ry = -Math.cos(angle) * s;
+            var jitter = (i % 2 === 0) ? 1 : 1.12;
+            if (i > 0) ctx.lineTo(rx * jitter, ry);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+        ctx.lineWidth = s * 0.035;
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 0.9);
+        ctx.lineTo(0, s * 0.85);
+        ctx.stroke();
+    }
 
-    function createLeaf() {
-        // 60% 绿色树叶, 40% 秋天枫叶
-        const isMaple = Math.random() < 0.4;
-        const colors = isMaple ? autumnColors : greenColors;
+    // ---- 调色板 ----
+    var greenPairs = [
+        ['#5ca904', '#3a7d0c'], ['#6dbd28', '#408a14'],
+        ['#4c9a1e', '#2d6b0c'], ['#78c83a', '#50941e'],
+        ['#8cc63f', '#5a9228'], ['#3e8510', '#1e5a04']
+    ];
+    var autumnPairs = [
+        ['#e8652a', '#c24418'], ['#d4382e', '#9e1f1c'],
+        ['#f08a3e', '#d45a20'], ['#e8a838', '#c07a1e'],
+        ['#d4523a', '#a82e1e'], ['#f47b4a', '#cc4a22'],
+        ['#e09838', '#b8701e'], ['#c84030', '#8e1c14']
+    ];
+
+    // ---- 叶子对象 ----
+
+    function createLeaf(resetY) {
+        var types = ['willow', 'willow', 'willow', 'maple', 'maple', 'heart', 'serrated'];
+        var type = types[Math.floor(Math.random() * types.length)];
+        var isAutumn = type === 'maple' ? Math.random() < 0.85 : Math.random() < 0.3;
+        var pairs = isAutumn ? autumnPairs : greenPairs;
+        var pair = pairs[Math.floor(Math.random() * pairs.length)];
+
+        // 三层景深
+        var depth = Math.random();
+        var depthScale;
+        if (depth < 0.3) {
+            depthScale = 0.45;  // 远景: 小、慢、淡
+        } else if (depth < 0.75) {
+            depthScale = 0.75;  // 中景
+        } else {
+            depthScale = 1.0;   // 近景: 大、快、浓
+        }
+
+        var baseSize = 12 + Math.random() * 22;
         return {
+            type: type,
             x: Math.random() * w,
-            y: -60 - Math.random() * h,
-            size: 8 + Math.random() * 18,
-            speed: 0.4 + Math.random() * 1.2,
+            y: (typeof resetY === 'number') ? resetY : Math.random() * h,
+            size: baseSize * depthScale,
+            depthScale: depthScale,
+            speed: (0.25 + Math.random() * 0.7) * depthScale,
             rotation: Math.random() * Math.PI * 2,
-            rotationSpeed: (Math.random() - 0.5) * 0.03,
-            sway: Math.random() * 60,
-            swaySpeed: 0.005 + Math.random() * 0.015,
-            opacity: 0.6 + Math.random() * 0.4,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            isMaple: isMaple,
-            startTime: Date.now() + Math.random() * 10000
+            rotSpeed: (Math.random() - 0.5) * 0.018,
+            swayPhase: Math.random() * Math.PI * 2,
+            swayAmp: 0.25 + Math.random() * 0.8,
+            swayFreq: 0.003 + Math.random() * 0.008,
+            floatPhase: Math.random() * Math.PI * 2,
+            floatAmp: 0.15 + Math.random() * 0.35,
+            opacity: (0.35 + Math.random() * 0.4) * (0.5 + depthScale * 0.5),
+            c1: pair[0],
+            c2: pair[1],
+            wobble: Math.random() * 0.015
         };
     }
 
-    // 初始化
-    for (let i = 0; i < LEAF_COUNT; i++) {
-        const leaf = createLeaf();
-        leaf.y = Math.random() * h; // 初始时分散在屏幕各处
-        leaves.push(leaf);
+    // 初始化 (分散在屏幕各处 + 上方)
+    var totalLeaves = 50;
+    for (var i = 0; i < totalLeaves; i++) {
+        leaves.push(createLeaf(-80 - Math.random() * h * 0.5));
     }
 
-    function updateLeaf(l) {
-        l.y += l.speed;
-        l.rotation += l.rotationSpeed;
-        l.x += Math.sin(Date.now() * l.swaySpeed + l.sway) * 0.4;
-
-        // 飘出屏幕后重置
-        if (l.y > h + 60) {
-            l.y = -60;
-            l.x = Math.random() * w;
-        }
-        if (l.x < -60) l.x = w + 60;
-        if (l.x > w + 60) l.x = -60;
-    }
-
-    function drawLeafWrapper(l) {
-        ctx.globalAlpha = l.opacity;
-        if (l.isMaple) {
-            drawMapleLeaf(ctx, l.x, l.y, l.size, l.rotation, l.color);
+    // ---- 阵风系统 ----
+    function updateGust(dt) {
+        if (gust.active) {
+            gust.timer -= dt;
+            if (gust.timer <= 0) {
+                gust.active = false;
+                gust.cooldown = 4000 + Math.random() * 8000;
+                gust.strength = 0;
+            } else {
+                var progress = gust.timer / 3000;
+                gust.strength = Math.sin(progress * Math.PI) * (1.5 + Math.random() * 2);
+            }
         } else {
-            drawLeaf(ctx, l.x, l.y, l.size, l.rotation, l.color);
+            gust.cooldown -= dt;
+            if (gust.cooldown <= 0) {
+                gust.active = true;
+                gust.timer = 2500 + Math.random() * 2000;
+                gust.direction = (Math.random() - 0.5) * 1.6;
+            }
+        }
+    }
+
+    // ---- 绘制叶柄和叶片 ----
+    var leafDrawers = {
+        willow: drawWillowLeaf,
+        heart: drawHeartLeaf,
+        maple: drawMapleLeaf,
+        serrated: drawSerratedLeaf
+    };
+
+    function drawLeaf(l) {
+        ctx.save();
+        ctx.translate(l.x, l.y);
+        ctx.rotate(l.rotation);
+        ctx.scale(1, 1);
+
+        // 叶片主体
+        leafDrawers[l.type](ctx, l.size, l.c1, l.c2);
+
+        // 叶柄
+        ctx.strokeStyle = '#8b7355';
+        ctx.lineWidth = l.size * 0.05;
+        ctx.beginPath();
+        ctx.moveTo(0, l.size * 0.72);
+        ctx.quadraticCurveTo(l.size * 0.08, l.size * 0.9, l.size * 0.12, l.size * 1.1);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    // ---- 主循环 ----
+    var lastTime = performance.now();
+
+    function animate(now) {
+        requestAnimationFrame(animate);
+
+        var dt = Math.min(now - lastTime, 50);
+        lastTime = now;
+        globalTime = now;
+
+        updateGust(dt);
+        ctx.clearRect(0, 0, w, h);
+
+        for (var i = 0; i < leaves.length; i++) {
+            var l = leaves[i];
+
+            // 垂直降落 (雪花般的缓慢飘落)
+            l.y += l.speed * (dt / 16);
+
+            // 水平摇摆 (正弦 + 阵风)
+            var sway = Math.sin(globalTime * l.swayFreq + l.swayPhase) * l.swayAmp;
+            sway += gust.strength * gust.direction * l.depthScale;
+            l.x += sway * (dt / 16);
+
+            // 竖直微浮动 (模拟雪花轻盈感)
+            l.y += Math.sin(globalTime * 0.002 + l.floatPhase) * l.floatAmp * (dt / 16);
+
+            // 旋转
+            l.rotation += l.rotSpeed * (dt / 16) + l.wobble * Math.sin(globalTime * 0.003 + l.floatPhase) * (dt / 16);
+
+            // 出界回收
+            if (l.y > h + 50) {
+                l.y = -50;
+                l.x = Math.random() * w;
+            }
+            if (l.x < -70) l.x = w + 70;
+            if (l.x > w + 70) l.x = -70;
+
+            // 绘制
+            ctx.globalAlpha = l.opacity;
+            drawLeaf(l);
         }
         ctx.globalAlpha = 1;
     }
 
-    function animate() {
-        ctx.clearRect(0, 0, w, h);
-        for (const l of leaves) {
-            updateLeaf(l);
-            drawLeafWrapper(l);
-        }
-        requestAnimationFrame(animate);
-    }
-
-    animate();
+    requestAnimationFrame(animate);
 })();
 </script>
 </body>
