@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.extensions import db
+from app.models import Photo
 
 user_bp = Blueprint('user', __name__)
 
@@ -22,7 +23,5 @@ def profile():
 @user_bp.route('/profile/photos')
 @login_required
 def my_photos():
-    photos = current_user.photos.order_by(
-        current_user.photos.any().created_at.desc()
-    ).all()
+    photos = current_user.photos.order_by(Photo.created_at.desc()).all()
     return render_template('my_photos.html', photos=photos)

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from app.models import Photo
+from app.models import Photo, Comment
 
 main_bp = Blueprint('main', __name__)
 
@@ -16,9 +16,7 @@ def index():
 @main_bp.route('/photo/<int:photo_id>')
 def photo_detail(photo_id):
     photo = Photo.query.get_or_404(photo_id)
-    comments = photo.comments.order_by(photo.comments.any().created_at.desc()).all() \
-        if photo.comments.count() > 0 \
-        else photo.comments.order_by(None).all()
+    comments = photo.comments.order_by(Comment.created_at.desc()).all()
     return render_template('photo_detail.html', photo=photo, comments=comments)
 
 

@@ -27,9 +27,13 @@
         .photo-card { transition: all 0.3s ease; }
         .flash-error { background: #fef2f2; border-left: 4px solid #ef4444; }
         .flash-success { background: #f0fdf4; border-left: 4px solid #22c55e; }
+        #leaf-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        nav, main, footer, .flash-messages { position: relative; z-index: 1; }
     </style>
 </head>
 <body class="bg-green-50 min-h-screen">
+    <canvas id="leaf-canvas"></canvas>
+
     <!-- 导航栏 -->
     <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-green-100">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -59,7 +63,7 @@
     <!-- Flash 消息 -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="max-w-4xl mx-auto mt-4 px-4 space-y-2">
+    <div class="flash-messages max-w-4xl mx-auto mt-4 px-4 space-y-2">
         {% for category, message in messages %}
         <div class="flash-{{ category }} p-3 rounded-r-lg text-sm animate-pulse">
             {{ message }}
@@ -75,8 +79,138 @@
     </main>
 
     <!-- 页脚 -->
-    <footer class="text-center text-gray-400 text-xs py-8 border-t border-green-100 mt-12">
+    <footer class="text-center text-gray-400 text-xs py-8 border-t border-green-100 mt-12" style="z-index:1;position:relative;">
         <p>🌱 用镜头记录生活的每一刻</p>
     </footer>
+
+<script>
+(function() {
+    const canvas = document.getElementById('leaf-canvas');
+    const ctx = canvas.getContext('2d');
+    let w, h;
+    let leaves = [];
+
+    function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const LEAF_COUNT = 35;
+
+    // 树叶形状绘制函数
+    function drawLeaf(ctx, x, y, size, rotation, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        // 画树叶形状
+        ctx.moveTo(0, -size);
+        ctx.bezierCurveTo(size * 0.5, -size * 0.5, size * 0.6, 0, 0, size);
+        ctx.bezierCurveTo(-size * 0.6, 0, -size * 0.5, -size * 0.5, 0, -size);
+        ctx.fill();
+        // 叶脉
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 0.8);
+        ctx.lineTo(0, size * 0.7);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // 枫叶形状绘制函数
+    function drawMapleLeaf(ctx, x, y, size, rotation, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        // 五角枫叶
+        const s = size;
+        ctx.moveTo(0, -s);
+        ctx.lineTo(s * 0.3, -s * 0.4);
+        ctx.lineTo(s * 0.9, -s * 0.5);
+        ctx.lineTo(s * 0.45, -s * 0.05);
+        ctx.lineTo(s * 0.6, s * 0.5);
+        ctx.lineTo(0, s * 0.15);
+        ctx.lineTo(-s * 0.6, s * 0.5);
+        ctx.lineTo(-s * 0.45, -s * 0.05);
+        ctx.lineTo(-s * 0.9, -s * 0.5);
+        ctx.lineTo(-s * 0.3, -s * 0.4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // 颜色定义
+    const greenColors = ['#22c55e', '#16a34a', '#4ade80', '#15803d', '#86efac'];
+    const autumnColors = ['#ea580c', '#dc2626', '#f97316', '#eab308', '#b91c1c', '#fb923c', '#facc15', '#d97706'];
+
+    function createLeaf() {
+        // 60% 绿色树叶, 40% 秋天枫叶
+        const isMaple = Math.random() < 0.4;
+        const colors = isMaple ? autumnColors : greenColors;
+        return {
+            x: Math.random() * w,
+            y: -60 - Math.random() * h,
+            size: 8 + Math.random() * 18,
+            speed: 0.4 + Math.random() * 1.2,
+            rotation: Math.random() * Math.PI * 2,
+            rotationSpeed: (Math.random() - 0.5) * 0.03,
+            sway: Math.random() * 60,
+            swaySpeed: 0.005 + Math.random() * 0.015,
+            opacity: 0.6 + Math.random() * 0.4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            isMaple: isMaple,
+            startTime: Date.now() + Math.random() * 10000
+        };
+    }
+
+    // 初始化
+    for (let i = 0; i < LEAF_COUNT; i++) {
+        const leaf = createLeaf();
+        leaf.y = Math.random() * h; // 初始时分散在屏幕各处
+        leaves.push(leaf);
+    }
+
+    function updateLeaf(l) {
+        l.y += l.speed;
+        l.rotation += l.rotationSpeed;
+        l.x += Math.sin(Date.now() * l.swaySpeed + l.sway) * 0.4;
+
+        // 飘出屏幕后重置
+        if (l.y > h + 60) {
+            l.y = -60;
+            l.x = Math.random() * w;
+        }
+        if (l.x < -60) l.x = w + 60;
+        if (l.x > w + 60) l.x = -60;
+    }
+
+    function drawLeafWrapper(l) {
+        ctx.globalAlpha = l.opacity;
+        if (l.isMaple) {
+            drawMapleLeaf(ctx, l.x, l.y, l.size, l.rotation, l.color);
+        } else {
+            drawLeaf(ctx, l.x, l.y, l.size, l.rotation, l.color);
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, w, h);
+        for (const l of leaves) {
+            updateLeaf(l);
+            drawLeafWrapper(l);
+        }
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+})();
+</script>
 </body>
 </html>
