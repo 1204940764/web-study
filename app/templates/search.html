@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}搜索{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto mb-8">
+    <form method="GET" class="flex gap-2">
+        <input type="text" name="q" value="{{ query }}" required
+               class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-nature-300"
+               placeholder="搜索照片标题或描述...">
+        <button type="submit"
+                class="px-8 py-3 bg-nature-500 text-white rounded-xl hover:bg-nature-600 font-medium transition">
+            🔍 搜索
+        </button>
+    </form>
+</div>
+
+{% if query %}
+<h3 class="text-lg text-gray-600 mb-4">搜索 "{{ query }}" 的结果</h3>
+{% if photos %}
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {% for photo in photos %}
+    <a href="/photo/{{ photo.id }}" class="photo-card bg-white rounded-2xl overflow-hidden shadow-md block">
+        <div class="aspect-square overflow-hidden bg-gray-100">
+            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
+                 alt="{{ photo.title }}"
+                 class="w-full h-full object-cover" loading="lazy">
+        </div>
+        <div class="p-3">
+            <h3 class="font-semibold text-gray-800 truncate">{{ photo.title }}</h3>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-center text-gray-400 py-20">没有找到相关照片</p>
+{% endif %}
+{% endif %}
+{% endblock %}

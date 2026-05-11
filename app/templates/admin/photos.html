@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}照片管理{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-nature-700">📷 照片管理</h2>
+    <a href="/admin" class="text-sm text-gray-400 hover:text-gray-600">← 返回后台</a>
+</div>
+
+{% if photos %}
+<div class="bg-white rounded-2xl shadow-md overflow-hidden">
+    <table class="w-full">
+        <thead class="bg-gray-50 text-left text-sm text-gray-500">
+            <tr>
+                <th class="px-6 py-3">预览</th>
+                <th class="px-6 py-3">标题</th>
+                <th class="px-6 py-3">上传者</th>
+                <th class="px-6 py-3">状态</th>
+                <th class="px-6 py-3">操作</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+            {% for photo in photos %}
+            <tr class="text-sm hover:bg-gray-50">
+                <td class="px-6 py-4">
+                    <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
+                         class="w-16 h-16 object-cover rounded-lg">
+                </td>
+                <td class="px-6 py-4 font-medium">{{ photo.title }}</td>
+                <td class="px-6 py-4 text-gray-400">{{ photo.author.username or photo.author.email }}</td>
+                <td class="px-6 py-4">
+                    {% if photo.status == 'approved' %}
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">已通过</span>
+                    {% elif photo.status == 'pending' %}
+                    <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">待审核</span>
+                    {% else %}
+                    <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">已拒绝</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex gap-2">
+                        {% if photo.status != 'approved' %}
+                        <form method="POST" action="/admin/photos/{{ photo.id }}/approve">
+                            <button type="submit" class="text-green-500 hover:text-green-700">✓ 通过</button>
+                        </form>
+                        {% endif %}
+                        {% if photo.status != 'rejected' %}
+                        <form method="POST" action="/admin/photos/{{ photo.id }}/reject">
+                            <button type="submit" class="text-red-400 hover:text-red-600">✗ 拒绝</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-center text-gray-400 py-20">还没有照片</p>
+{% endif %}
+{% endblock %}

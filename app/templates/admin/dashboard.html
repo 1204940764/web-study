@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}管理后台{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold text-nature-700 mb-6">⚙ 管理后台</h2>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <a href="/admin/users" class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition">
+        <div class="text-3xl mb-2">👥</div>
+        <div class="text-2xl font-bold text-nature-600">{{ user_count }}</div>
+        <div class="text-sm text-gray-400">用户总数</div>
+    </a>
+    <a href="/admin/photos" class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition">
+        <div class="text-3xl mb-2">📷</div>
+        <div class="text-2xl font-bold text-nature-600">{{ photo_count }}</div>
+        <div class="text-sm text-gray-400">照片总数</div>
+    </a>
+    <a href="/admin/comments" class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition">
+        <div class="text-3xl mb-2">💬</div>
+        <div class="text-2xl font-bold text-nature-600">{{ comment_count }}</div>
+        <div class="text-sm text-gray-400">评论总数</div>
+    </a>
+    <a href="/admin/photos" class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition border-2 border-yellow-200">
+        <div class="text-3xl mb-2">⏳</div>
+        <div class="text-2xl font-bold text-yellow-600">{{ pending_count }}</div>
+        <div class="text-sm text-gray-400">待审核</div>
+    </a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <a href="/admin/users" class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition text-center">
+        <span class="text-3xl">👥</span>
+        <h3 class="font-bold mt-2">用户管理</h3>
+        <p class="text-sm text-gray-400 mt-1">管理所有用户账号</p>
+    </a>
+    <a href="/admin/photos" class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition text-center">
+        <span class="text-3xl">📷</span>
+        <h3 class="font-bold mt-2">审核照片</h3>
+        <p class="text-sm text-gray-400 mt-1">审核用户上传的照片</p>
+    </a>
+    <a href="/admin/comments" class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition text-center">
+        <span class="text-3xl">💬</span>
+        <h3 class="font-bold mt-2">评论管理</h3>
+        <p class="text-sm text-gray-400 mt-1">管理所有评论</p>
+    </a>
+</div>
+{% endblock %}
