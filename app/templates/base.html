@@ -104,9 +104,9 @@
 
     function drawFlake(ctx, s, opacity) {
         // 六角雪花主体
-        ctx.strokeStyle = 'rgba(255,255,255,' + (opacity * 0.9) + ')';
-        ctx.fillStyle = 'rgba(255,255,255,' + (opacity * 0.55) + ')';
-        ctx.lineWidth = s * 0.06;
+        ctx.strokeStyle = 'rgba(200,225,255,' + (opacity * 0.95) + ')';
+        ctx.fillStyle = 'rgba(210,235,255,' + (opacity * 0.7) + ')';
+        ctx.lineWidth = s * 0.1;
 
         for (var b = 0; b < 6; b++) {
             var angle = (Math.PI / 3) * b;
@@ -138,7 +138,7 @@
             ctx.stroke();
 
             // 中心小圆
-            ctx.fillStyle = 'rgba(255,255,255,' + (opacity * 0.7) + ')';
+            ctx.fillStyle = 'rgba(220,240,255,' + (opacity * 0.8) + ')';
             ctx.beginPath();
             ctx.arc(0, 0, s * 0.1, 0, Math.PI * 2);
             ctx.fill();
@@ -163,7 +163,7 @@
         return {
             x: Math.random() * w,
             y: (typeof resetY === 'number') ? resetY : Math.random() * h,
-            size: (4 + Math.random() * 12) * depthScale,
+            size: (6 + Math.random() * 18) * depthScale,
             depthScale: depthScale,
             speed: (0.2 + Math.random() * 0.5) * depthScale,
             rotation: Math.random() * Math.PI * 2,
@@ -173,12 +173,12 @@
             swayFreq: 0.002 + Math.random() * 0.006,
             floatPhase: Math.random() * Math.PI * 2,
             floatAmp: 0.1 + Math.random() * 0.3,
-            opacity: (0.08 + Math.random() * 0.2) * (0.4 + depthScale * 0.6)
+            opacity: (0.2 + Math.random() * 0.25) * (0.4 + depthScale * 0.6)
         };
     }
 
     // 初始化
-    var totalFlakes = 60;
+    var totalFlakes = 70;
     var storedState = sessionStorage.getItem('flakeState');
     var restored = false;
     if (storedState) {
