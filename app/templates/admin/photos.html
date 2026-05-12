@@ -49,6 +49,10 @@
                             <button type="submit" class="text-red-400 hover:text-red-600">✗ 拒绝</button>
                         </form>
                         {% endif %}
+                        <form method="POST" action="/admin/photos/{{ photo.id }}/delete"
+                              onsubmit="return confirm('确定删除照片「{{ photo.title }}」？此操作不可撤销。')">
+                            <button type="submit" class="text-red-500 hover:text-red-700 font-medium">删除</button>
+                        </form>
                     </div>
                 </td>
             </tr>

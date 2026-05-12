@@ -107,6 +107,27 @@ def reject_photo(photo_id):
     return redirect(url_for('admin.photos'))
 
 
+@admin_bp.route('/photos/<int:photo_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_photo(photo_id):
+    import os
+    photo = Photo.query.get_or_404(photo_id)
+    # 删除磁盘文件
+    base = 'app/static/uploads'
+    for f in [photo.filename, photo.thumb_filename]:
+        if f:
+            path = os.path.join(base, f)
+            if os.path.exists(path):
+                os.remove(path)
+    # 删除关联评论
+    Comment.query.filter_by(photo_id=photo_id).delete()
+    db.session.delete(photo)
+    db.session.commit()
+    flash('照片已删除', 'success')
+    return redirect(url_for('admin.photos'))
+
+
 @admin_bp.route('/comments')
 @login_required
 @admin_required
