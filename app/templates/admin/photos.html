@@ -23,7 +23,7 @@
             {% for photo in photos %}
             <tr class="text-sm hover:bg-gray-50">
                 <td class="px-6 py-4">
-                    <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
+                    <img src="{{ url_for('static', filename='uploads/' + (photo.thumb_filename or photo.filename)) }}"
                          class="w-16 h-16 object-cover rounded-lg">
                 </td>
                 <td class="px-6 py-4 font-medium">{{ photo.title }}</td>

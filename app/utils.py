@@ -30,7 +30,9 @@ def send_verification_email(email):
 
 
 def save_photo(file):
-    """保存上传的照片，返回文件名"""
+    """保存上传的照片，同时生成缩略图，返回 (原图文件名, 缩略图文件名)"""
+    from PIL import Image
+
     ext = os.path.splitext(file.filename)[1].lower()
     allowed = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
     if ext not in allowed:
@@ -39,4 +41,13 @@ def save_photo(file):
     name = ''.join(random.choices(string.ascii_letters + string.digits, k=32)) + ext
     filepath = os.path.join('app/static/uploads', name)
     file.save(filepath)
-    return name
+
+    # 生成缩略图
+    thumb_name = 'thumb_' + name.rsplit('.', 1)[0] + '.jpg'
+    thumb_path = os.path.join('app/static/uploads', thumb_name)
+    img = Image.open(filepath)
+    img.thumbnail((600, 600))
+    if img.mode in ('RGBA', 'P'):
+        img = img.convert('RGB')
+    img.save(thumb_path, 'JPEG', quality=75)
+    return name, thumb_name

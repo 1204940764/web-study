@@ -35,6 +35,7 @@ class Photo(db.Model):
     title = db.Column(db.String(128), nullable=False, default='')
     description = db.Column(db.Text, default='')
     filename = db.Column(db.String(256), nullable=False)
+    thumb_filename = db.Column(db.String(256), default='')
     status = db.Column(db.String(16), default='pending', index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

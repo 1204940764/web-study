@@ -21,7 +21,7 @@
     {% for photo in photos %}
     <a href="/photo/{{ photo.id }}" class="photo-card bg-white rounded-2xl overflow-hidden shadow-md block">
         <div class="aspect-square overflow-hidden bg-gray-100">
-            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
+            <img src="{{ url_for('static', filename='uploads/' + (photo.thumb_filename or photo.filename)) }}"
                  alt="{{ photo.title }}"
                  class="w-full h-full object-cover" loading="lazy">
         </div>

@@ -26,12 +26,13 @@ def upload():
             flash('请选择照片', 'error')
         else:
             try:
-                filename = save_photo(file)
+                filename, thumb_filename = save_photo(file)
                 photo = Photo(
                     user_id=current_user.id,
                     title=title,
                     description=description,
-                    filename=filename
+                    filename=filename,
+                    thumb_filename=thumb_filename
                 )
                 db.session.add(photo)
                 db.session.commit()
