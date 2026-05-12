@@ -14,7 +14,7 @@
             <p class="text-gray-500 mt-2">{{ photo.description }}</p>
             {% endif %}
             <div class="flex items-center gap-3 mt-4 text-sm text-gray-400">
-                <span>📷 {{ photo.author.username or photo.author.email }}</span>
+                <span>📷 <a href="/user/{{ photo.author.id }}/photos" class="text-nature-600 hover:underline">{{ photo.author.username or photo.author.email }}</a></span>
                 <span>🕐 {{ photo.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
             </div>
         </div>

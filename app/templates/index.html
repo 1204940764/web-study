@@ -10,18 +10,24 @@
 {% if photos.items %}
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
     {% for photo in photos.items %}
-    <a href="/photo/{{ photo.id }}" class="photo-card bg-white rounded-2xl overflow-hidden shadow-md block">
-        <div class="aspect-square overflow-hidden bg-gray-100">
-            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
-                 alt="{{ photo.title }}"
-                 class="w-full h-full object-cover"
-                 loading="lazy">
+    <div class="photo-card bg-white rounded-2xl overflow-hidden shadow-md">
+        <a href="/photo/{{ photo.id }}" class="block">
+            <div class="aspect-square overflow-hidden bg-gray-100">
+                <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
+                     alt="{{ photo.title }}"
+                     class="w-full h-full object-cover"
+                     loading="lazy">
+            </div>
+            <div class="p-3 pb-1">
+                <h3 class="font-semibold text-gray-800 truncate">{{ photo.title }}</h3>
+            </div>
+        </a>
+        <div class="px-3 pb-3">
+            <a href="/user/{{ photo.author.id }}/photos" class="text-xs text-nature-600 hover:underline transition">
+                {{ photo.author.username or photo.author.email }}
+            </a>
         </div>
-        <div class="p-3">
-            <h3 class="font-semibold text-gray-800 truncate">{{ photo.title }}</h3>
-            <p class="text-xs text-gray-400 mt-1">{{ photo.author.username or photo.author.email }}</p>
-        </div>
-    </a>
+    </div>
     {% endfor %}
 </div>
 

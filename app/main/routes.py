@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import Photo, Comment, Announcement, AnnouncementView
+from app.models import User, Photo, Comment, Announcement, AnnouncementView
 
 main_bp = Blueprint('main', __name__)
 
@@ -32,6 +32,16 @@ def photo_detail(photo_id):
     photo = Photo.query.get_or_404(photo_id)
     comments = photo.comments.order_by(Comment.created_at.desc()).all()
     return render_template('photo_detail.html', photo=photo, comments=comments)
+
+
+@main_bp.route('/user/<int:user_id>/photos')
+def user_photos(user_id):
+    user = User.query.get_or_404(user_id)
+    page = request.args.get('page', 1, type=int)
+    photos = Photo.query.filter_by(user_id=user.id, status='approved')\
+        .order_by(Photo.created_at.desc())\
+        .paginate(page=page, per_page=20)
+    return render_template('user_photos.html', user=user, photos=photos)
 
 
 @main_bp.route('/search')
