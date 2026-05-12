@@ -18,6 +18,7 @@ class User(UserMixin, db.Model):
 
     photos = db.relationship('Photo', backref='author', lazy='dynamic')
     comments = db.relationship('Comment', backref='author', lazy='dynamic')
+    suggestions = db.relationship('Suggestion', backref='author', lazy='dynamic')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -67,6 +68,15 @@ class AnnouncementView(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     announcement_id = db.Column(db.Integer, db.ForeignKey('announcements.id'), nullable=False)
     seen_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Suggestion(db.Model):
+    __tablename__ = 'suggestions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class EmailVerification(db.Model):

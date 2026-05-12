@@ -37,10 +37,25 @@
     <!-- 导航栏 -->
     <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-green-100">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="/" class="text-3xl font-bold text-nature-700 tracking-tight flex items-center gap-2">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8c0-5-4-9-9-9C2 1.5 1.5 4 1 6.5"/><circle cx="12" cy="12" r="3"/><path d="M12 15c0 5 4 9 9 9 6-1.5 6.5-4 7-6.5"/></svg>
-                光影记录
-            </a>
+            <div class="flex items-center gap-6">
+                <a href="/" class="text-3xl font-bold text-nature-700 tracking-tight flex items-center gap-2">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 8c0-5-4-9-9-9C2 1.5 1.5 4 1 6.5"/><circle cx="12" cy="12" r="3"/><path d="M12 15c0 5 4 9 9 9 6-1.5 6.5-4 7-6.5"/></svg>
+                    光影记录
+                </a>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin %}
+                    <a href="/admin/suggestions" class="text-sm text-nature-600 hover:text-nature-800 font-medium flex items-center gap-1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        用户建议
+                    </a>
+                    {% else %}
+                    <a href="/suggest" class="text-sm text-nature-600 hover:text-nature-800 font-medium flex items-center gap-1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        建议
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
             <div class="flex items-center gap-5 text-base font-medium">
                 <a href="/" class="text-gray-600 hover:text-nature-600 font-medium">首页</a>
                 <a href="/search" class="text-gray-600 hover:text-nature-600 font-medium">🔍 搜索</a>

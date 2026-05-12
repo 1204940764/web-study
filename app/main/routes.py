@@ -1,7 +1,8 @@
+from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import User, Photo, Comment, Announcement, AnnouncementView
+from app.models import User, Photo, Comment, Announcement, AnnouncementView, Suggestion
 
 main_bp = Blueprint('main', __name__)
 
@@ -42,6 +43,33 @@ def user_photos(user_id):
         .order_by(Photo.created_at.desc())\
         .paginate(page=page, per_page=20)
     return render_template('user_photos.html', user=user, photos=photos)
+
+
+@main_bp.route('/suggest', methods=['GET', 'POST'])
+@login_required
+def suggest():
+    if current_user.is_admin:
+        return redirect(url_for('main.index'))
+
+    if request.method == 'POST':
+        content = request.form.get('content', '').strip()
+        if not content:
+            flash('建议内容不能为空', 'error')
+        else:
+            today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            already = Suggestion.query.filter(
+                Suggestion.user_id == current_user.id,
+                Suggestion.created_at >= today_start
+            ).first()
+            if already:
+                flash('一天只能发送一条建议，请明天再发送', 'error')
+            else:
+                db.session.add(Suggestion(user_id=current_user.id, content=content))
+                db.session.commit()
+                flash('建议已发送，感谢你的反馈！', 'success')
+                return redirect(url_for('main.index'))
+
+    return render_template('suggest.html')
 
 
 @main_bp.route('/search')

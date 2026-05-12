@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import User, Photo, Comment, Announcement, AnnouncementView
+from app.models import User, Photo, Comment, Announcement, AnnouncementView, Suggestion
 from app.decorators import admin_required
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -39,6 +39,8 @@ def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     Comment.query.filter_by(user_id=user_id).delete()
     Photo.query.filter_by(user_id=user_id).delete()
+    Suggestion.query.filter_by(user_id=user_id).delete()
+    AnnouncementView.query.filter_by(user_id=user_id).delete()
     db.session.delete(user)
     db.session.commit()
     flash('用户已删除', 'success')
@@ -122,6 +124,14 @@ def delete_comment(comment_id):
     db.session.commit()
     flash('评论已删除', 'success')
     return redirect(url_for('admin.comments'))
+
+
+@admin_bp.route('/suggestions')
+@login_required
+@admin_required
+def suggestions():
+    suggestions = Suggestion.query.order_by(Suggestion.created_at.desc()).all()
+    return render_template('admin/suggestions.html', suggestions=suggestions)
 
 
 @admin_bp.route('/announcements')
