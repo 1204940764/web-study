@@ -20,12 +20,18 @@
             </div>
         </a>
         <div class="px-3 pb-3">
-            <span class="inline-block text-xs px-2 py-0.5 rounded-full
-                {% if photo.status == 'approved' %}bg-green-100 text-green-700
-                {% elif photo.status == 'pending' %}bg-yellow-100 text-yellow-700
-                {% else %}bg-red-100 text-red-700{% endif %}">
-                {{ {'pending': '待审核', 'approved': '已通过', 'rejected': '已拒绝'}[photo.status] }}
-            </span>
+            <div class="flex items-center justify-between mt-1">
+                <span class="inline-block text-xs px-2 py-0.5 rounded-full
+                    {% if photo.status == 'approved' %}bg-green-100 text-green-700
+                    {% elif photo.status == 'pending' %}bg-yellow-100 text-yellow-700
+                    {% else %}bg-red-100 text-red-700{% endif %}">
+                    {{ {'pending': '待审核', 'approved': '已通过', 'rejected': '已拒绝'}[photo.status] }}
+                </span>
+                <form method="POST" action="/photo/{{ photo.id }}/delete"
+                      onsubmit="return confirm('确定删除照片「{{ photo.title }}」？')">
+                    <button type="submit" class="text-xs text-gray-400 hover:text-red-500 transition">删除</button>
+                </form>
+            </div>
         </div>
     </div>
     {% endfor %}

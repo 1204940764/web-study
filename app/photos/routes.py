@@ -65,6 +65,29 @@ def add_comment(photo_id):
     return redirect(url_for('main.photo_detail', photo_id=photo_id))
 
 
+@photos_bp.route('/photo/<int:photo_id>/delete', methods=['POST'])
+@login_required
+def delete_photo(photo_id):
+    photo = Photo.query.get_or_404(photo_id)
+    if current_user.id != photo.user_id and not current_user.is_admin:
+        flash('无权删除此照片', 'error')
+        return redirect(url_for('user.my_photos'))
+
+    # 删除磁盘文件
+    base = 'app/static/uploads'
+    for f in [photo.filename, photo.thumb_filename]:
+        if f:
+            path = os.path.join(base, f)
+            if os.path.exists(path):
+                os.remove(path)
+    # 删除关联评论
+    Comment.query.filter_by(photo_id=photo_id).delete()
+    db.session.delete(photo)
+    db.session.commit()
+    flash('照片已删除', 'success')
+    return redirect(url_for('user.my_photos'))
+
+
 @photos_bp.route('/comment/<int:comment_id>/delete', methods=['POST'])
 @login_required
 def delete_comment(comment_id):
