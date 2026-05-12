@@ -45,6 +45,36 @@ def delete_user(user_id):
     return redirect(url_for('admin.users'))
 
 
+@admin_bp.route('/users/<int:user_id>/toggle-mute', methods=['POST'])
+@login_required
+@admin_required
+def toggle_mute(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.is_admin:
+        flash('不能禁言管理员', 'error')
+        return redirect(url_for('admin.users'))
+    user.is_muted = not user.is_muted
+    db.session.commit()
+    action = '禁言' if user.is_muted else '解除禁言'
+    flash(f'用户 {user.email} 已{action}', 'success')
+    return redirect(url_for('admin.users'))
+
+
+@admin_bp.route('/users/<int:user_id>/toggle-upload-ban', methods=['POST'])
+@login_required
+@admin_required
+def toggle_upload_ban(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.is_admin:
+        flash('不能禁止管理员发布', 'error')
+        return redirect(url_for('admin.users'))
+    user.is_upload_banned = not user.is_upload_banned
+    db.session.commit()
+    action = '禁止发布' if user.is_upload_banned else '解除发布限制'
+    flash(f'用户 {user.email} 已{action}', 'success')
+    return redirect(url_for('admin.users'))
+
+
 @admin_bp.route('/photos')
 @login_required
 @admin_required

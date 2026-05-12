@@ -12,6 +12,10 @@ photos_bp = Blueprint('photos', __name__)
 @login_required
 def upload():
     if request.method == 'POST':
+        if current_user.is_upload_banned:
+            flash('你已被禁止发布照片', 'error')
+            return redirect(url_for('user.my_photos'))
+
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         file = request.files.get('photo')
@@ -44,6 +48,10 @@ def upload():
 def add_comment(photo_id):
     photo = Photo.query.get_or_404(photo_id)
     content = request.form.get('content', '').strip()
+
+    if current_user.is_muted:
+        flash('你已被禁言，无法发表评论', 'error')
+        return redirect(url_for('main.photo_detail', photo_id=photo_id))
 
     if not content:
         flash('评论不能为空', 'error')

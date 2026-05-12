@@ -25,15 +25,21 @@
         <h3 class="text-lg font-bold text-gray-700 mb-4">💬 评论 ({{ comments|length }})</h3>
 
         {% if current_user.is_authenticated %}
-        <form method="POST" action="/photo/{{ photo.id }}/comment" class="mb-6">
-            <textarea name="content" rows="3" required
-                      class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-nature-300 resize-none"
-                      placeholder="写下你的评论..."></textarea>
-            <button type="submit"
-                    class="mt-2 bg-nature-500 text-white px-6 py-2 rounded-full hover:bg-nature-600 text-sm font-medium transition">
-                发表评论
-            </button>
-        </form>
+            {% if current_user.is_muted %}
+            <p class="text-center text-gray-400 mb-6 py-4 bg-red-50 rounded-xl text-sm">
+                你已被禁言，无法发表评论
+            </p>
+            {% else %}
+            <form method="POST" action="/photo/{{ photo.id }}/comment" class="mb-6">
+                <textarea name="content" rows="3" required
+                          class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-nature-300 resize-none"
+                          placeholder="写下你的评论..."></textarea>
+                <button type="submit"
+                        class="mt-2 bg-nature-500 text-white px-6 py-2 rounded-full hover:bg-nature-600 text-sm font-medium transition">
+                    发表评论
+                </button>
+            </form>
+            {% endif %}
         {% else %}
         <p class="text-center text-gray-400 mb-6 py-4 bg-gray-50 rounded-xl">
             <a href="/login" class="text-nature-600 hover:underline">登录</a> 后才能发表评论

@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-nature-700">👥 用户管理</h2>
+    <h2 class="text-2xl font-bold text-nature-700">用户管理</h2>
     <a href="/admin" class="text-sm text-gray-400 hover:text-gray-600">← 返回后台</a>
 </div>
 
@@ -15,6 +15,7 @@
                 <th class="px-6 py-3">邮箱</th>
                 <th class="px-6 py-3">用户名</th>
                 <th class="px-6 py-3">角色</th>
+                <th class="px-6 py-3">状态</th>
                 <th class="px-6 py-3">注册时间</th>
                 <th class="px-6 py-3">操作</th>
             </tr>
@@ -32,13 +33,38 @@
                     <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">普通用户</span>
                     {% endif %}
                 </td>
+                <td class="px-6 py-4">
+                    {% if user.is_muted %}
+                    <span class="text-xs bg-red-50 text-red-500 px-2 py-0.5 rounded-full">已禁言</span>
+                    {% endif %}
+                    {% if user.is_upload_banned %}
+                    <span class="text-xs bg-yellow-50 text-yellow-600 px-2 py-0.5 rounded-full ml-1">禁止发布</span>
+                    {% endif %}
+                    {% if not user.is_muted and not user.is_upload_banned %}
+                    <span class="text-xs bg-green-50 text-green-500 px-2 py-0.5 rounded-full">正常</span>
+                    {% endif %}
+                </td>
                 <td class="px-6 py-4 text-gray-400">{{ user.created_at.strftime('%Y-%m-%d') }}</td>
                 <td class="px-6 py-4">
                     {% if user.id != current_user.id %}
-                    <form method="POST" action="/admin/users/{{ user.id }}/delete"
-                          onsubmit="return confirm('确定删除用户 {{ user.email }}？此操作不可撤销。')">
-                        <button type="submit" class="text-red-400 hover:text-red-600">删除</button>
-                    </form>
+                    <div class="flex items-center gap-3">
+                        {% if not user.is_admin %}
+                        <form method="POST" action="/admin/users/{{ user.id }}/toggle-mute" class="inline">
+                            <button type="submit" class="{% if user.is_muted %}text-green-500 hover:text-green-700{% else %}text-orange-400 hover:text-orange-600{% endif %}">
+                                {{ '解除禁言' if user.is_muted else '禁言' }}
+                            </button>
+                        </form>
+                        <form method="POST" action="/admin/users/{{ user.id }}/toggle-upload-ban" class="inline">
+                            <button type="submit" class="{% if user.is_upload_banned %}text-green-500 hover:text-green-700{% else %}text-yellow-500 hover:text-yellow-700{% endif %}">
+                                {{ '解除发布' if user.is_upload_banned else '禁止发布' }}
+                            </button>
+                        </form>
+                        {% endif %}
+                        <form method="POST" action="/admin/users/{{ user.id }}/delete"
+                              onsubmit="return confirm('确定删除用户 {{ user.email }}？此操作不可撤销。')" class="inline">
+                            <button type="submit" class="text-red-400 hover:text-red-600">删除</button>
+                        </form>
+                    </div>
                     {% else %}
                     <span class="text-gray-300">当前用户</span>
                     {% endif %}

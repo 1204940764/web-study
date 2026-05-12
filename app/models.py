@@ -12,6 +12,8 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), nullable=False, default='')
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    is_muted = db.Column(db.Boolean, default=False)
+    is_upload_banned = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     photos = db.relationship('Photo', backref='author', lazy='dynamic')
