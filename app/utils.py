@@ -30,7 +30,7 @@ def send_verification_email(email):
 
 
 def save_photo(file):
-    """保存上传的照片，同时生成缩略图，返回 (原图文件名, 缩略图文件名)"""
+    """保存上传的照片，压缩原图 + 生成缩略图，返回 (文件名, 缩略图文件名)"""
     from PIL import Image
 
     ext = os.path.splitext(file.filename)[1].lower()
@@ -38,16 +38,21 @@ def save_photo(file):
     if ext not in allowed:
         raise ValueError('不支持的文件格式')
 
-    name = ''.join(random.choices(string.ascii_letters + string.digits, k=32)) + ext
+    name = ''.join(random.choices(string.ascii_letters + string.digits, k=32)) + '.jpg'
     filepath = os.path.join('app/static/uploads', name)
-    file.save(filepath)
 
-    # 生成缩略图
-    thumb_name = 'thumb_' + name.rsplit('.', 1)[0] + '.jpg'
-    thumb_path = os.path.join('app/static/uploads', thumb_name)
-    img = Image.open(filepath)
-    img.thumbnail((600, 600))
+    img = Image.open(file)
     if img.mode in ('RGBA', 'P'):
         img = img.convert('RGB')
+
+    # 压缩原图：长边最大 1600px
+    img.thumbnail((1600, 1600))
+    img.save(filepath, 'JPEG', quality=85)
+
+    # 生成缩略图：长边最大 400px
+    thumb_name = 'thumb_' + name.rsplit('.', 1)[0] + '.jpg'
+    thumb_path = os.path.join('app/static/uploads', thumb_name)
+    img.thumbnail((400, 400))
     img.save(thumb_path, 'JPEG', quality=75)
+
     return name, thumb_name
