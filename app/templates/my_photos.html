@@ -2,21 +2,25 @@
 {% block title %}我的照片{% endblock %}
 
 {% block content %}
-<h2 class="text-2xl font-bold text-nature-700 mb-6">📷 我的照片</h2>
+<h2 class="text-2xl font-bold text-nature-700 mb-6">我的照片</h2>
 
 {% if photos %}
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
     {% for photo in photos %}
     <div class="bg-white rounded-2xl overflow-hidden shadow-md">
-        <div class="aspect-square overflow-hidden bg-gray-100">
-            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
-                 alt="{{ photo.title }}"
-                 class="w-full h-full object-cover"
-                 loading="lazy">
-        </div>
-        <div class="p-3">
-            <h3 class="font-semibold text-gray-800 truncate">{{ photo.title }}</h3>
-            <span class="inline-block mt-1 text-xs px-2 py-0.5 rounded-full
+        <a href="/photo/{{ photo.id }}" class="block">
+            <div class="aspect-square overflow-hidden bg-gray-100">
+                <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
+                     alt="{{ photo.title }}"
+                     class="w-full h-full object-cover"
+                     loading="lazy">
+            </div>
+            <div class="p-3">
+                <h3 class="font-semibold text-gray-800 truncate">{{ photo.title }}</h3>
+            </div>
+        </a>
+        <div class="px-3 pb-3">
+            <span class="inline-block text-xs px-2 py-0.5 rounded-full
                 {% if photo.status == 'approved' %}bg-green-100 text-green-700
                 {% elif photo.status == 'pending' %}bg-yellow-100 text-yellow-700
                 {% else %}bg-red-100 text-red-700{% endif %}">
