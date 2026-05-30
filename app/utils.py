@@ -31,7 +31,7 @@ def send_verification_email(email):
 
 def save_photo(file):
     """保存上传的照片，压缩原图 + 生成缩略图，返回 (文件名, 缩略图文件名)"""
-    from PIL import Image
+    from PIL import Image, ImageOps
 
     ext = os.path.splitext(file.filename)[1].lower()
     allowed = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
@@ -42,6 +42,7 @@ def save_photo(file):
     filepath = os.path.join('app/static/uploads', name)
 
     img = Image.open(file)
+    img = ImageOps.exif_transpose(img)
     if img.mode in ('RGBA', 'P'):
         img = img.convert('RGB')
 

@@ -39,20 +39,24 @@
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex gap-2">
+                        {% if not photo.author.is_super_admin or current_user.is_super_admin %}
                         {% if photo.status != 'approved' %}
                         <form method="POST" action="/admin/photos/{{ photo.id }}/approve">
-                            <button type="submit" class="text-green-500 hover:text-green-700">✓ 通过</button>
+                            <button type="submit" class="text-green-500 hover:text-green-700">通过</button>
                         </form>
                         {% endif %}
                         {% if photo.status != 'rejected' %}
                         <form method="POST" action="/admin/photos/{{ photo.id }}/reject">
-                            <button type="submit" class="text-red-400 hover:text-red-600">✗ 拒绝</button>
+                            <button type="submit" class="text-red-400 hover:text-red-600">拒绝</button>
                         </form>
                         {% endif %}
+                        {% endif %}
+                        {% if not photo.author.is_super_admin or current_user.is_super_admin %}
                         <form method="POST" action="/admin/photos/{{ photo.id }}/delete"
                               onsubmit="return confirm('确定删除照片「{{ photo.title }}」？此操作不可撤销。')">
                             <button type="submit" class="text-red-500 hover:text-red-700 font-medium">删除</button>
                         </form>
+                        {% endif %}
                     </div>
                 </td>
             </tr>

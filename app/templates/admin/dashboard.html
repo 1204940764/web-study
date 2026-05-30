@@ -4,6 +4,26 @@
 {% block content %}
 <h2 class="text-2xl font-bold text-nature-700 mb-6">管理后台</h2>
 
+<!-- 审核开关 -->
+<div class="bg-white rounded-2xl shadow-md p-6 mb-6 flex items-center justify-between">
+    <div>
+        <h3 class="font-bold text-gray-800 text-lg">审核功能</h3>
+        <p class="text-sm text-gray-400 mt-0.5">
+            {% if review_enabled %}
+            当前状态：<span class="text-yellow-600 font-medium">开启</span> — 用户上传照片需审核后才能公开展示
+            {% else %}
+            当前状态：<span class="text-green-600 font-medium">关闭</span> — 所有用户可直接发布照片，无需审核
+            {% endif %}
+        </p>
+    </div>
+    <form method="POST" action="/admin/toggle-review">
+        <button type="submit"
+                class="{% if review_enabled %}bg-yellow-500 hover:bg-yellow-600{% else %}bg-green-500 hover:bg-green-600{% endif %} text-white px-6 py-2.5 rounded-xl font-medium transition active:scale-[0.98] text-sm">
+            {% if review_enabled %}关闭审核{% else %}开启审核{% endif %}
+        </button>
+    </form>
+</div>
+
 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
     <a href="/admin/users" class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition">
         <div class="text-3xl mb-2">

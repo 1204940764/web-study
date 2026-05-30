@@ -32,6 +32,15 @@ def create_app(config_class=Config):
     from app.models import Announcement, AnnouncementView
     from flask_login import current_user
 
+    from datetime import timezone, timedelta
+
+    @app.template_filter('beijing_time')
+    def beijing_time_filter(dt):
+        if dt is None:
+            return ''
+        beijing_tz = timezone(timedelta(hours=8))
+        return dt.replace(tzinfo=timezone.utc).astimezone(beijing_tz).strftime('%Y-%m-%d %H:%M')
+
     @app.context_processor
     def inject_unread_announcement():
         if current_user.is_authenticated:

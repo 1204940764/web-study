@@ -11,9 +11,17 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     username = db.Column(db.String(64), nullable=False, default='')
     password_hash = db.Column(db.String(256), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
+    role = db.Column(db.String(16), default='user', index=True)  # 'user', 'admin', 'super_admin'
     is_muted = db.Column(db.Boolean, default=False)
     is_upload_banned = db.Column(db.Boolean, default=False)
+
+    @property
+    def is_admin(self):
+        return self.role in ('admin', 'super_admin')
+
+    @property
+    def is_super_admin(self):
+        return self.role == 'super_admin'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     photos = db.relationship('Photo', backref='author', lazy='dynamic')
@@ -78,6 +86,27 @@ class Suggestion(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Config(db.Model):
+    __tablename__ = 'config'
+
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    value = db.Column(db.String(256), nullable=False, default='')
+
+    @staticmethod
+    def get(key, default=''):
+        row = Config.query.filter_by(key=key).first()
+        return row.value if row else default
+
+    @staticmethod
+    def set(key, value):
+        row = Config.query.filter_by(key=key).first()
+        if row:
+            row.value = value
+        else:
+            db.session.add(Config(key=key, value=value))
 
 
 class EmailVerification(db.Model):

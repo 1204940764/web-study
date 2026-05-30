@@ -3,6 +3,13 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto">
+    <!-- 返回按钮 -->
+    <a href="/" onclick="if(document.referrer&&document.referrer.includes(location.host)){history.back();return false}"
+       class="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm shadow-lg rounded-full px-5 py-3 mb-6 hover:bg-white hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-[0.98] text-gray-700 font-medium border border-gray-200/60">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        返回
+    </a>
+
     <!-- 照片展示 -->
     <div class="bg-white rounded-2xl shadow-md overflow-hidden mb-8">
         <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
@@ -15,7 +22,7 @@
             {% endif %}
             <div class="flex items-center gap-3 mt-4 text-sm text-gray-400">
                 <span>📷 <a href="/user/{{ photo.author.id }}/photos" class="text-nature-600 hover:underline">{{ photo.author.username or photo.author.email }}</a></span>
-                <span>🕐 {{ photo.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                <span>🕐 {{ photo.created_at|beijing_time }}</span>
             </div>
         </div>
     </div>
@@ -53,7 +60,7 @@
                 <div class="flex items-center gap-2 text-sm">
                     <span class="font-semibold text-gray-700">{{ comment.author.username or comment.author.email }}</span>
                     <span class="text-gray-300">·</span>
-                    <span class="text-gray-400">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    <span class="text-gray-400">{{ comment.created_at|beijing_time }}</span>
                     {% if current_user.is_authenticated and (current_user.id == comment.user_id or current_user.is_admin) %}
                     <form method="POST" action="/comment/{{ comment.id }}/delete"
                           onsubmit="return confirm('确定删除这条评论？')" class="ml-auto">

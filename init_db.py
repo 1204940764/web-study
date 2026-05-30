@@ -11,7 +11,7 @@ with app.app_context():
 
     admin_email = '1204940764@qq.com'
     if not User.query.filter_by(email=admin_email).first():
-        admin = User(email=admin_email, username='管理员', is_admin=True)
+        admin = User(email=admin_email, username='管理员', role='super_admin')
         admin.set_password('ljw20040420')
         db.session.add(admin)
         db.session.commit()

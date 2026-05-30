@@ -310,7 +310,7 @@
         <div class="p-6">
             <h3 class="text-xl font-bold text-gray-800 mb-3">{{ unread_announcement.title }}</h3>
             <p class="text-gray-600 leading-relaxed whitespace-pre-wrap">{{ unread_announcement.content }}</p>
-            <p class="text-xs text-gray-400 mt-4">{{ unread_announcement.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p class="text-xs text-gray-400 mt-4">{{ unread_announcement.created_at|beijing_time }}</p>
         </div>
         <div class="px-6 pb-5">
             <button onclick="dismissAnnouncement()"

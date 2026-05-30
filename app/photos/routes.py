@@ -2,7 +2,7 @@ import os
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models import Photo, Comment
+from app.models import Photo, Comment, Config
 from app.utils import save_photo
 
 photos_bp = Blueprint('photos', __name__)
@@ -27,21 +27,27 @@ def upload():
         else:
             try:
                 filename, thumb_filename = save_photo(file)
+                review_enabled = Config.get('review_enabled', '1') == '1'
                 photo = Photo(
                     user_id=current_user.id,
                     title=title,
                     description=description,
                     filename=filename,
-                    thumb_filename=thumb_filename
+                    thumb_filename=thumb_filename,
+                    status='pending' if review_enabled else 'approved'
                 )
                 db.session.add(photo)
                 db.session.commit()
-                flash('上传成功，等待管理员审核', 'success')
+                if review_enabled:
+                    flash('上传成功，等待管理员审核', 'success')
+                else:
+                    flash('上传成功', 'success')
                 return redirect(url_for('user.my_photos'))
             except ValueError as e:
                 flash(str(e), 'error')
 
-    return render_template('upload.html')
+    review_enabled = Config.get('review_enabled', '1') == '1'
+    return render_template('upload.html', review_enabled=review_enabled)
 
 
 @photos_bp.route('/photo/<int:photo_id>/comment', methods=['POST'])

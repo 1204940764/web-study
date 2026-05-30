@@ -39,7 +39,7 @@
             <div class="flex-1 mr-4">
                 <h4 class="font-bold text-gray-800">{{ ann.title }}</h4>
                 <p class="text-gray-500 text-sm mt-1 whitespace-pre-wrap">{{ ann.content }}</p>
-                <p class="text-xs text-gray-400 mt-2">{{ ann.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p class="text-xs text-gray-400 mt-2">{{ ann.created_at|beijing_time }}</p>
             </div>
             <form method="POST" action="/admin/announcements/{{ ann.id }}/delete"
                   onsubmit="return confirm('确定删除此公告？')">
