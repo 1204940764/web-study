@@ -9,12 +9,12 @@ with app.app_context():
     db.create_all()
     print('数据库表创建完成')
 
-    admin_email = '1204940764@qq.com'
+    admin_email = 'admin'
     if not User.query.filter_by(email=admin_email).first():
-        admin = User(email=admin_email, username='管理员', role='super_admin')
-        admin.set_password('ljw20040420')
+        admin = User(email=admin_email, username='admin', role='super_admin')
+        admin.set_password('123456')
         db.session.add(admin)
         db.session.commit()
-        print(f'管理员账号已创建: {admin_email} / ljw20040420')
+        print(f'超级管理员已创建: {admin_email} / 123456')
     else:
         print('管理员账号已存在')
