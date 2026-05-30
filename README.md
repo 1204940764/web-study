@@ -24,13 +24,11 @@
 | 认证 | Flask-Login + Werkzeug scrypt |
 | 邮件 | Flask-Mail + QQ SMTP |
 | 图片处理 | Pillow（压缩、缩略图、EXIF 旋转） |
-| 生产部署 | Gunicorn + Nginx + Let's Encrypt SSL |
 
 ## 环境要求
 
 - Python 3.10+
 - MySQL 8.0+
-- Ubuntu 22.04（或其他 Linux 发行版）
 
 ## 本地开发
 
@@ -72,89 +70,6 @@ MAIL_PASSWORD=QQ邮箱 SMTP 授权码（不是登录密码）
 ```
 
 QQ 邮箱 SMTP 开启方式：邮箱设置 → 账户 → POP3/SMTP 服务 → 开启并获取授权码。
-
-## 生产部署（Ubuntu + Nginx + Gunicorn）
-
-```bash
-# 1. 安装 MySQL
-sudo apt update
-sudo apt install mysql-server -y
-sudo mysql_secure_installation
-
-# 2. 创建数据库
-sudo mysql < init.sql
-
-# 3. 安装 Python 依赖
-sudo apt install python3-pip python3-venv -y
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# 4. 配置 .env（同上）
-
-# 5. 初始化数据库
-python3 init_db.py
-mkdir -p app/static/uploads
-
-# 6. 配置 Gunicorn systemd 服务
-sudo tee /etc/systemd/system/photo-blog.service << 'EOF'
-[Unit]
-Description=Photo Blog Gunicorn
-After=network.target
-
-[Service]
-User=ubuntu
-WorkingDirectory=/home/ubuntu/photo-blog
-ExecStart=/home/ubuntu/photo-blog/venv/bin/gunicorn -w 2 -b 127.0.0.1:8000 run:app
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable photo-blog
-sudo systemctl start photo-blog
-
-# 7. 安装 Nginx
-sudo apt install nginx -y
-
-sudo tee /etc/nginx/sites-available/photo-blog << 'EOF'
-server {
-    listen 80;
-    server_name your-domain.com;
-    return 301 https://$host$request_uri;
-}
-
-server {
-    server_name your-domain.com;
-    client_max_body_size 16M;
-
-    location /static {
-        alias /home/ubuntu/photo-blog/app/static;
-    }
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    listen 443 ssl;
-    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
-}
-EOF
-
-sudo ln -s /etc/nginx/sites-available/photo-blog /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-
-# 8. 配置 SSL 证书（使用 certbot）
-sudo apt install certbot python3-certbot-nginx -y
-sudo certbot --nginx -d your-domain.com
-```
 
 ## 首次登录
 
